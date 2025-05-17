@@ -1,53 +1,48 @@
+pip install streamlit ultralytics opencv-python-headless
+
 import streamlit as st
-import numpy as np
-from PIL import Image
-import joblib  # or import pickle
+from ultralytics import YOLO
 import cv2
+import tempfile
+from PIL import Image
+import os
 
-# Load your model
-model = joblib.load('yolov8_reckless2.pt')  # Replace with your model path
+# Load YOLOv8 model
+model = YOLO("yolov8_reckless2.pt")
 
-st.set_page_config(page_title="Road Safety Monitoring", layout="wide")
+# Custom styling
+st.set_page_config(page_title="🚦 Reckless Driving Detector", layout="centered")
+st.markdown(
+    "<h1 style='text-align: center; color: #ff4b4b;'>Reckless Driving Behavior Recognition</h1>"
+    "<h4 style='text-align: center;'>Road Safety Monitoring System</h4><hr>",
+    unsafe_allow_html=True
+)
 
-# Title section
-st.markdown("""
-    <h1 style='text-align: center; color: #1f77b4;'>🚦 Reckless Driving Behavior Recognition</h1>
-    <h4 style='text-align: center; color: #666;'>For Road Safety Monitoring</h4>
-    <hr>
-""", unsafe_allow_html=True)
+st.sidebar.title("Upload Media")
+media_type = st.sidebar.radio("Choose input type:", ("Image", "Video"))
 
-# Sidebar
-st.sidebar.title("🛣️ Navigation")
-option = st.sidebar.selectbox("Select Input Type", ["Upload Image", "Upload Video"])
+if media_type == "Image":
+    uploaded_file = st.sidebar.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+    if uploaded_file:
+        st.image(uploaded_file, caption="Uploaded Image", use_column_width=True)
+        image = Image.open(uploaded_file).convert("RGB")
+        results = model.predict(image)
+        res_plotted = results[0].plot()
+        st.image(res_plotted, caption="Prediction", use_column_width=True)
 
-# Class labels
-class_labels = ['Pedestrian', 'Vehicle', 'Unsafe', 'Safe']
+elif media_type == "Video":
+    uploaded_video = st.sidebar.file_uploader("Upload a video", type=["mp4", "avi", "mov"])
+    if uploaded_video:
+        tfile = tempfile.NamedTemporaryFile(delete=False)
+        tfile.write(uploaded_video.read())
+        cap = cv2.VideoCapture(tfile.name)
 
-# Upload & Predict
-if option == "Upload Image":
-    uploaded_file = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
-
-    if uploaded_file is not None:
-        image = Image.open(uploaded_file).convert('RGB')
-        st.image(image, caption='Uploaded Image', use_column_width=True)
-
-        # Preprocess image
-        img_array = np.array(image.resize((224, 224))) / 255.0
-        img_array = img_array.reshape(1, -1)  # Adjust as per model input
-
-        if st.button("Predict"):
-            prediction = model.predict(img_array)
-            st.success(f"Prediction: {class_labels[int(prediction[0])]}")
-            
-elif option == "Upload Video":
-    uploaded_video = st.file_uploader("Upload a video", type=["mp4", "avi", "mov"])
-
-    if uploaded_video is not None:
-        st.video(uploaded_video)
-        st.info("Video processing will be available in the extended version of this app.")
-
-# Footer
-st.markdown("""
-    <hr>
-    <p style='text-align: center;'>Made with ❤️ for safer roads — Streamlit Gorgeous like You 😎</p>
-""", unsafe_allow_html=True)
+        stframe = st.empty()
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+            results = model.predict(frame)
+            res_plotted = results[0].plot()
+            stframe.image(res_plotted, channels="BGR", use_column_width=True)
+        cap.release()
