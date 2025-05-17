@@ -1,5 +1,7 @@
 streamlit
+tensorflow
+opencv_python==4.10.0.84
+opencv-python-headless
+opencv-python
 pillow
 numpy
-joblib
-opencv-python-headless
