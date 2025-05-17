@@ -1,5 +1,3 @@
-pip install streamlit ultralytics opencv-python-headless
-
 import streamlit as st
 from ultralytics import YOLO
 import cv2
