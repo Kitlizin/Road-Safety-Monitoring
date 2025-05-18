@@ -6,7 +6,7 @@ from PIL import Image
 import tempfile
 import random
 
-model = YOLO("yolov8_reckless_best.pt")
+model = YOLO("FinalModel_yolov8.pt")
 
 st.set_page_config(page_title="🚗 Reckless Driving Detector", layout="centered")
 
