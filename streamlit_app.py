@@ -45,7 +45,7 @@ def draw_boxes(image_np, results):
         cv2.rectangle(image_np, (x1, y1 - h - 10), (x1 + w, y1), color, -1)
 
         cv2.putText(image_np, label_text, (x1, y1 - 5),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
     return image_np
 
 if media_type == "🖼️ Image":
