@@ -29,6 +29,14 @@ def get_class_colors(class_names):
 
 class_colors = get_class_colors(model.names.values())
 
+
+custom_colors = {
+    "Vehicle": (137, 207, 240),     # Light Blue
+    "Pedestrian": (255, 179, 71),   # Light Orange
+    "Safe": (144, 238, 144),        # Light Green
+    "Unsafe": (255, 107, 107)       # Light Red
+}
+
 def draw_boxes(image_np, results):
     for box in results.boxes:
         x1, y1, x2, y2 = map(int, box.xyxy[0])
@@ -36,17 +44,19 @@ def draw_boxes(image_np, results):
         label = results.names[class_id]
         conf = float(box.conf[0])
         label_text = f"{label} {conf:.2f}"
-        color = class_colors.get(label, (242, 142, 142))
+
+        color = custom_colors.get(label, (255, 255, 255)) 
 
         cv2.rectangle(image_np, (x1, y1), (x2, y2), color, 2)
 
         (w, h), _ = cv2.getTextSize(label_text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
-
         cv2.rectangle(image_np, (x1, y1 - h - 10), (x1 + w, y1), color, -1)
 
         cv2.putText(image_np, label_text, (x1, y1 - 5),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
+
     return image_np
+
 
 if media_type == "🖼️ Image":
     uploaded_image = st.sidebar.file_uploader("Upload your image", type=["jpg", "jpeg", "png"]) 
@@ -66,7 +76,7 @@ elif media_type == "🎥 Video":
         cap = cv2.VideoCapture(temp_video.name)
         stframe = st.empty()
 
-        st.info("Processing video... Grab a coffee ☕")
+        st.info("Processing video...")
 
         while cap.isOpened():
             ret, frame = cap.read()
