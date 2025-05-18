@@ -6,22 +6,20 @@ from PIL import Image
 import tempfile
 
 # Load YOLOv8 model
-model = YOLO("yolov8_reckless_best.pt")
+model = YOLO("yolov8_reckless2.pt")
 
-# Streamlit page setup
+# Streamlit page config
 st.set_page_config(page_title="🚦 Reckless Driving Detector", layout="centered")
-st.markdown(
-    """
+st.markdown("""
     <h1 style='text-align: center; color: #ff4b4b;'>Reckless Driving Behavior Recognition</h1>
     <h4 style='text-align: center;'>Road Safety Monitoring System</h4><hr>
-    """,
-    unsafe_allow_html=True
-)
+    """, unsafe_allow_html=True)
 
-# Sidebar for input selection
+# Sidebar upload options
 st.sidebar.title("📂 Upload Media")
 media_type = st.sidebar.radio("Choose input type:", ("Image", "Video"))
 
+# Draw bounding boxes with small font
 def draw_boxes(image_np, results):
     for box in results.boxes:
         x1, y1, x2, y2 = map(int, box.xyxy[0])
@@ -32,15 +30,17 @@ def draw_boxes(image_np, results):
         cv2.putText(image_np, label_text, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 1)
     return image_np
 
+# Image upload
 if media_type == "Image":
     uploaded_file = st.sidebar.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
     if uploaded_file:
         image = Image.open(uploaded_file).convert("RGB")
         image_np = np.array(image)
         results = model(image_np)[0]
-        processed_image = draw_boxes(image_np, results)
+        processed_image = draw_boxes(image_np.copy(), results)
         st.image(processed_image, caption="🖼️ Detection Result", use_container_width=True)
 
+# Video upload
 elif media_type == "Video":
     uploaded_video = st.sidebar.file_uploader("Upload a video", type=["mp4", "avi", "mov"])
     if uploaded_video:
