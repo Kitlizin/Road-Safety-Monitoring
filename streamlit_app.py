@@ -36,7 +36,7 @@ def draw_boxes(image_np, results):
         label = results.names[class_id]
         conf = float(box.conf[0])
         label_text = f"{label} {conf:.2f}"
-        color = class_colors.get(label, (0, 255, 0))
+        color = class_colors.get(label, (214, 39, 40))
 
         cv2.rectangle(image_np, (x1, y1), (x2, y2), color, 2)
 
