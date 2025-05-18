@@ -6,7 +6,7 @@ from PIL import Image
 import os
 
 # Load YOLOv8 model
-model = YOLO("best.pt")
+model = YOLO("byolov8_reckless9.pt")
 
 # Custom styling
 st.set_page_config(page_title="🚦 Reckless Driving Detector", layout="centered")
