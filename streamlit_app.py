@@ -5,10 +5,10 @@ import cv2
 from PIL import Image
 import tempfile
 
-# Load YOLOv8 model
+# Load the YOLOv8 model
 model = YOLO("yolov8_reckless2.pt")
 
-# Streamlit page setup
+# Streamlit page configuration
 st.set_page_config(page_title="🚦 Reckless Driving Detector", layout="centered")
 st.markdown(
     """
@@ -18,20 +18,28 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Sidebar for input selection
+# Sidebar interface
 st.sidebar.title("📂 Upload Media")
 media_type = st.sidebar.radio("Choose input type:", ("Image", "Video"))
 
+# Function to draw bounding boxes with small font
 def draw_boxes(image_np, results):
     for box in results.boxes:
         x1, y1, x2, y2 = map(int, box.xyxy[0])
-        label = results.names[int(box.cls[0])]
+        class_id = int(box.cls[0])
+        label = results.names[class_id]
         conf = float(box.conf[0])
         label_text = f"{label} {conf:.2f}"
+
+        # Draw rectangle and label
         cv2.rectangle(image_np, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        cv2.putText(image_np, label_text, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 1)
+        cv2.putText(
+            image_np, label_text, (x1, max(10, y1 - 5)),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 255, 255), 1, cv2.LINE_AA
+        )
     return image_np
 
+# Handle image input
 if media_type == "Image":
     uploaded_file = st.sidebar.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
     if uploaded_file:
@@ -41,6 +49,7 @@ if media_type == "Image":
         processed_image = draw_boxes(image_np, results)
         st.image(processed_image, caption="🖼️ Detection Result", use_column_width=True)
 
+# Handle video input
 elif media_type == "Video":
     uploaded_video = st.sidebar.file_uploader("Upload a video", type=["mp4", "avi", "mov"])
     if uploaded_video:
@@ -48,6 +57,7 @@ elif media_type == "Video":
         tfile.write(uploaded_video.read())
         cap = cv2.VideoCapture(tfile.name)
         stframe = st.empty()
+
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
@@ -55,4 +65,5 @@ elif media_type == "Video":
             results = model(frame)[0]
             annotated_frame = draw_boxes(frame, results)
             stframe.image(annotated_frame, channels="BGR", use_column_width=True)
+
         cap.release()
