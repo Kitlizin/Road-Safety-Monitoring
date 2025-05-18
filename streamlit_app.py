@@ -28,8 +28,8 @@ def draw_boxes(image_np, results):
         label = results.names[int(box.cls[0])]
         conf = float(box.conf[0])
         label_text = f"{label} {conf:.2f}"
-        cv2.rectangle(image_np, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        cv2.putText(image_np, label_text, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 1)
+        cv2.rectangle(image_np, (x1, y1), (x2, y2), (0, 255, 0), 4)
+        cv2.putText(image_np, label_text, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 5)
     return image_np
 
 if media_type == "Image":
