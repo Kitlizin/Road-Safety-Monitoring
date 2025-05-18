@@ -13,8 +13,7 @@ st.set_page_config(page_title="🚗 Reckless Driving Detector", layout="centered
  
 st.markdown(
     """
-    <h1 style='text-align: center; color: #d62728;'>🚦 Reckless Driving Behavior Recognition For Road Safety Monitoring 🚦
-    </h1>
+    <h1 style='text-align: center; color: #d62728;'>🚦Reckless Driving Behavior Recognition For Road Safety Monitoring🚦</h1>
     <h4 style='text-align: center;'>⚠️ Road Safety Monitoring System ⚠️</h4><hr> 
     """,
     unsafe_allow_html=True
