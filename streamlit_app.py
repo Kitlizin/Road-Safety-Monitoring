@@ -81,7 +81,7 @@ elif media_type == "🎥 Video":
         cap.release()
         st.success("Video processing complete! Drive safe! 🚗💨")
 
-elif media_type == "📷 Camera":
+elif media_type == "📷 Webcam":
     class VideoProcessor(VideoProcessorBase):
         def recv(self, frame):
             img = frame.to_ndarray(format="bgr24")
