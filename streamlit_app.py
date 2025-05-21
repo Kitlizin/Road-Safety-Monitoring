@@ -2,10 +2,8 @@ import streamlit as st
 from ultralytics import YOLO
 import numpy as np
 import cv2
-from PIL import Image
-import tempfile
 import random
-from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, WebRtcMode
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
 
 model = YOLO("FinalModel_yolov8.pt")
 
@@ -19,8 +17,14 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.sidebar.title("📂 Upload Your Media")
-media_type = st.sidebar.radio("Choose Input Type 🎯:", ("🖼️ Image", "🎥 Video", "📷 Camera"))
+st.sidebar.title("📂 Choose Input Type")
+media_type = st.sidebar.radio("Select input 🎯:", ("🖼️ Image", "🎥 Video", "📷 Webcam"))
+
+def get_class_colors(class_names):
+    random.seed(42)
+    return {name: [random.randint(0, 255) for _ in range(3)] for name in class_names}
+
+class_colors = get_class_colors(model.names.values())
 
 custom_colors = {
     "Vehicle": (137, 207, 240),     # Light Blue
@@ -45,8 +49,9 @@ def draw_boxes(image_np, results):
     return image_np
 
 if media_type == "🖼️ Image":
-    uploaded_image = st.sidebar.file_uploader("Upload your image", type=["jpg", "jpeg", "png"])
+    uploaded_image = st.sidebar.file_uploader("Upload your image", type=["jpg", "jpeg", "png"]) 
     if uploaded_image:
+        from PIL import Image
         image = Image.open(uploaded_image).convert("RGB")
         image_np = np.array(image)
         results = model(image_np)[0]
@@ -54,7 +59,8 @@ if media_type == "🖼️ Image":
         st.image(processed, caption="🖼️ Detection Result — Stay safe out there!", use_container_width=True)
 
 elif media_type == "🎥 Video":
-    uploaded_video = st.sidebar.file_uploader("Upload your video", type=["mp4", "avi", "mov"])
+    import tempfile
+    uploaded_video = st.sidebar.file_uploader("Upload your video", type=["mp4", "avi", "mov"]) 
     if uploaded_video:
         temp_video = tempfile.NamedTemporaryFile(delete=False)
         temp_video.write(uploaded_video.read())
@@ -75,23 +81,24 @@ elif media_type == "🎥 Video":
         cap.release()
         st.success("Video processing complete! Drive safe! 🚗💨")
 
-elif media_type == "📷 Camera":
-    st.info("Initializing webcam...")
-
+elif media_type == "📷 Webcam":
     class VideoProcessor(VideoProcessorBase):
-        def __init__(self):
-            self.model = model
-
         def recv(self, frame):
             img = frame.to_ndarray(format="bgr24")
-            results = self.model(img)[0]
+            results = model(img)[0]
             annotated = draw_boxes(img.copy(), results)
-            return annotated
+            return av.VideoFrame.from_ndarray(annotated, format="bgr24")
 
     webrtc_streamer(
-        key="realtime",
-        mode=WebRtcMode.SENDRECV,
+        key="webcam",
         video_processor_factory=VideoProcessor,
+        rtc_configuration={
+            "iceServers": [
+                {"urls": ["stun:stun.l.google.com:19302"]},
+                {"urls": ["stun:stun1.l.google.com:19302"]},
+                {"urls": ["stun:stun2.l.google.com:19302"]},
+            ]
+        },
         media_stream_constraints={"video": True, "audio": False},
         async_processing=True,
     )
