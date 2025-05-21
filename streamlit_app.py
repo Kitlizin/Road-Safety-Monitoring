@@ -22,17 +22,11 @@ st.markdown(
 st.sidebar.title("📂 Upload Your Media")
 media_type = st.sidebar.radio("Choose Input Type 🎯:", ("🖼️ Image", "🎥 Video", "📷 Camera"))
 
-def get_class_colors(class_names):
-    random.seed(42)
-    return {name: [random.randint(0, 255) for _ in range(3)] for name in class_names}
-
-class_colors = get_class_colors(model.names.values())
-
 custom_colors = {
-    "Vehicle": (137, 207, 240),
-    "Pedestrian": (255, 179, 71),
-    "Safe": (144, 238, 144),
-    "Unsafe": (255, 107, 107)
+    "Vehicle": (137, 207, 240),     # Light Blue
+    "Pedestrian": (255, 179, 71),   # Light Orange
+    "Safe": (144, 238, 144),        # Light Green
+    "Unsafe": (255, 107, 107)       # Light Red
 }
 
 def draw_boxes(image_np, results):
@@ -46,7 +40,8 @@ def draw_boxes(image_np, results):
         cv2.rectangle(image_np, (x1, y1), (x2, y2), color, 2)
         (w, h), _ = cv2.getTextSize(label_text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
         cv2.rectangle(image_np, (x1, y1 - h - 10), (x1 + w, y1), color, -1)
-        cv2.putText(image_np, label_text, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+        cv2.putText(image_np, label_text, (x1, y1 - 5),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
     return image_np
 
 if media_type == "🖼️ Image":
@@ -80,18 +75,19 @@ elif media_type == "🎥 Video":
         cap.release()
         st.success("Video processing complete! Drive safe! 🚗💨")
 
-class VideoProcessor(VideoProcessorBase):
-    def __init__(self):
-        self.model = model
-
-    def recv(self, frame):
-        img = frame.to_ndarray(format="bgr24")
-        results = self.model(img)[0]
-        annotated = draw_boxes(img.copy(), results)
-        return annotated
-
-if media_type == "📷 Camera":
+elif media_type == "📷 Camera":
     st.info("Initializing webcam...")
+
+    class VideoProcessor(VideoProcessorBase):
+        def __init__(self):
+            self.model = model
+
+        def recv(self, frame):
+            img = frame.to_ndarray(format="bgr24")
+            results = self.model(img)[0]
+            annotated = draw_boxes(img.copy(), results)
+            return annotated
+
     webrtc_streamer(
         key="realtime",
         mode=WebRtcMode.SENDRECV,
