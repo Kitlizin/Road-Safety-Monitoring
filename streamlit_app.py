@@ -5,6 +5,7 @@ import cv2
 from PIL import Image
 import tempfile
 import random
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, WebRtcMode
 
 model = YOLO("FinalModel_yolov8.pt")
 
@@ -79,23 +80,22 @@ elif media_type == "🎥 Video":
         cap.release()
         st.success("Video processing complete! Drive safe! 🚗💨")
 
-elif media_type == "📷 Camera":
-    stframe = st.empty()
-    st.info("Starting webcam...")
+class VideoProcessor(VideoProcessorBase):
+    def __init__(self):
+        self.model = model
 
-    cap = cv2.VideoCapture(0)
+    def recv(self, frame):
+        img = frame.to_ndarray(format="bgr24")
+        results = self.model(img)[0]
+        annotated = draw_boxes(img.copy(), results)
+        return annotated
 
-    if not cap.isOpened():
-        st.error("Cannot access webcam.")
-    else:
-        run = st.checkbox("Stop Webcam", value=False)
-        while cap.isOpened() and not run:
-            ret, frame = cap.read()
-            if not ret:
-                break
-            results = model(frame)[0]
-            annotated = draw_boxes(frame.copy(), results)
-            stframe.image(annotated, channels="BGR", use_container_width=True)
-
-        cap.release()
-        st.success("Webcam stopped.")
+if media_type == "📷 Camera":
+    st.info("Initializing webcam...")
+    webrtc_streamer(
+        key="realtime",
+        mode=WebRtcMode.SENDRECV,
+        video_processor_factory=VideoProcessor,
+        media_stream_constraints={"video": True, "audio": False},
+        async_processing=True,
+    )
