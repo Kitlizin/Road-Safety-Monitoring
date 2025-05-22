@@ -18,7 +18,7 @@ st.markdown(
 )
 
 st.sidebar.title("📂 Choose Input Type")
-media_type = st.sidebar.radio("Select input 🎯:", ("🖼️ Image", "🎥 Video", "📷 Webcam"))
+media_type = st.sidebar.radio("Select input 🎯:", ("🖼️ Image", "🎥 Video"))
 
 def get_class_colors(class_names):
     random.seed(42)
@@ -29,8 +29,6 @@ class_colors = get_class_colors(model.names.values())
 custom_colors = {
     "Vehicle": (137, 207, 240),     # Light Blue
     "Pedestrian": (255, 179, 71),   # Light Orange
-    "Safe": (144, 238, 144),        # Light Green
-    "Unsafe": (255, 107, 107)       # Light Red
 }
 
 def draw_boxes(image_np, results):
@@ -80,25 +78,3 @@ elif media_type == "🎥 Video":
 
         cap.release()
         st.success("Video processing complete! Drive safe! 🚗💨")
-
-elif media_type == "📷 Webcam":
-    class VideoProcessor(VideoProcessorBase):
-        def recv(self, frame):
-            img = frame.to_ndarray(format="bgr24")
-            results = model(img)[0]
-            annotated = draw_boxes(img.copy(), results)
-            return av.VideoFrame.from_ndarray(annotated, format="bgr24")
-
-    webrtc_streamer(
-        key="webcam",
-        video_processor_factory=VideoProcessor,
-        rtc_configuration={
-            "iceServers": [
-                {"urls": ["stun:stun.l.google.com:19302"]},
-                {"urls": ["stun:stun1.l.google.com:19302"]},
-                {"urls": ["stun:stun2.l.google.com:19302"]},
-            ]
-        },
-        media_stream_constraints={"video": True, "audio": False},
-        async_processing=True,
-    )
